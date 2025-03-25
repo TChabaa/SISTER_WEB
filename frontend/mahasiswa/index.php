@@ -27,31 +27,7 @@ $mahasiswa = $stmt->fetchAll(PDO::FETCH_ASSOC);
         alamat: ''
     }
 }">
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="../index.php" class="text-xl font-bold text-gray-800">UMS</a>
-                    </div>
-                    <div class="hidden md:ml-6 md:flex md:space-x-8">
-                        <a href="../mahasiswa/index.php"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 border-indigo-500 text-gray-900">
-                            Mahasiswa
-                        </a>
-                        <a href="../dosen/index.php"
-                            class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-700">
-                            Dosen
-                        </a>
-                        <a href="../krs/index.php"
-                            class="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-700">
-                            Mata Kuliah
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <?php include '../components/navbar.php'; ?>
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="px-4 py-6 sm:px-0">
@@ -153,74 +129,52 @@ $mahasiswa = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
             <div
-                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">KRS Management</h3>
-                    <?php
-                    if (isset($currentNIM)) {
-                        $stmt = $pdo->prepare('SELECT k.*, m.NamaMataKuliah, d.Nama as NamaDosen 
-                                              FROM KRS k 
-                                              JOIN MataKuliah m ON k.KodeMataKuliah = m.KodeMataKuliah 
-                                              JOIN Dosen d ON k.NIP = d.NIP 
-                                              WHERE k.NIM = ?');
-                        $stmt->execute([$currentNIM]);
-                        $krs_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    }
-                    ?>
-                    <div class="mt-4">
-                        <a href="add_krs.php?nim=" x-bind:href="'add_krs.php?nim=' + currentNIM"
-                            class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">
-                            Add New KRS
-                        </a>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">KRS Management</h3>
+                        <button @click="showKRSModal = false" class="text-gray-400 hover:text-gray-500">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <div class="mt-4">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Mata Kuliah</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Dosen</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Nilai</th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <?php if (isset($krs_list)) foreach ($krs_list as $krs): ?>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <?= htmlspecialchars($krs['NamaMataKuliah']) ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <?= htmlspecialchars($krs['NamaDosen']) ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <?= htmlspecialchars($krs['Nilai']) ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="edit_krs.php?id=<?= $krs['ID_KRS'] ?>"
-                                            class="text-yellow-600 hover:text-yellow-900">Edit</a>
-                                        <a href="delete_krs.php?id=<?= $krs['ID_KRS'] ?>"
-                                            class="text-red-600 hover:text-red-900 ml-2"
-                                            onclick="return confirm('Are you sure you want to delete this KRS?')">Delete</a>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+
+                    <div x-init="
+                        $watch('showKRSModal', value => {
+                            if (value && currentNIM) {
+                                fetch('get_krs.php?nim=' + currentNIM)
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        $el.querySelector('.krs-table-container').innerHTML = html;
+                                    });
+                            }
+                        });
+                    ">
+
+                        <div class="mt-4">
+                            <a href="add_krs.php?nim=" x-bind:href="'add_krs.php?nim=' + currentNIM"
+                                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">
+                                Add New KRS
+                            </a>
+                        </div>
+                        <div class="krs-table-container mt-4">
+                        </div>
                     </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" @click="showKRSModal = false"
-                        class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm">
-                        Close
-                    </button>
+                    </table>
                 </div>
             </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" @click="showKRSModal = false"
+                    class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm">
+                    Close
+                </button>
+            </div>
         </div>
+    </div>
     </div>
 </body>
 

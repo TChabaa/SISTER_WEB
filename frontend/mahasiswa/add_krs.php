@@ -12,10 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nim = $_POST['nim'];
     $kodemk = $_POST['kodemk'];
     $nip = $_POST['nip'];
+    $nilai = $_POST['nilai'];
 
     try {
-        $stmt = $pdo->prepare('INSERT INTO KRS (NIM, KodeMataKuliah, NIP) VALUES (?, ?, ?)');
-        $stmt->execute([$nim, $kodemk, $nip]);
+        $stmt = $pdo->prepare('INSERT INTO KRS (NIM, KodeMataKuliah, NIP, Nilai) VALUES (?, ?, ?, ?)');
+        $stmt->execute([$nim, $kodemk, $nip, $nilai]);
         header('Location: index.php');
         exit;
     } catch (PDOException $e) {
@@ -68,6 +69,12 @@ $nim = $_GET['nim'] ?? '';
                             </option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="nilai">Nilai</label>
+                        <input type="text" name="nilai" required
+                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
 
                     <div class="flex items-center justify-between">
